@@ -1,0 +1,247 @@
+{
+  "generated_at": 1789841252.697013,
+  "repository_revision": "c570804f6e9912e74b5023efff0b8e5960d78e0d",
+  "scope": "local Ollama/Qwen review component diagnostic over synthetic frames",
+  "not_evidence_for": [
+    "full runtime throughput",
+    "field accuracy",
+    "camera ingest",
+    "production acceptance"
+  ],
+  "host": {
+    "platform": "Darwin",
+    "machine": "arm64",
+    "logical_cpu_count": 10,
+    "memory_bytes": 34359738368
+  },
+  "server": {
+    "endpoint": "http://127.0.0.1:11436",
+    "pid": 59942,
+    "requested_parallelism": 4,
+    "effective_runner_parallelism": 1,
+    "effective_parallelism_evidence": "runner command contains -np 1",
+    "startup_warning_observed": "model architecture does not currently support parallel requests; architecture=qwen3vl",
+    "version": {
+      "version": "0.34.2"
+    },
+    "process_commands_after_trial": [
+      "<PROJECT>/.tools/ollama/ollama serve",
+      "<PROJECT>/.tools/ollama/llama-server --model <PROJECT>/models/ollama/blobs/sha256-aafed9e48b157ae913cee994e0d9ac927af51e256feafbd923bf2852e8856d00 --port 53738 --host 127.0.0.1 --no-webui --offline -c 32768 -np 1 --log-verbosity 4 --no-log-prefix --no-log-timestamps --no-jinja --chat-template chatml --mmproj <PROJECT>/models/ollama/blobs/sha256-aafed9e48b157ae913cee994e0d9ac927af51e256feafbd923bf2852e8856d00 --image-min-tokens 1024 --flash-attn auto -b 1024 -ub 1024 --context-shift --keep 4"
+    ],
+    "api_ps_before": {
+      "models": [
+        {
+          "name": "qwen3-vl:2b-instruct",
+          "model": "qwen3-vl:2b-instruct",
+          "size": 5468061694,
+          "digest": "ea422f1e73652a95479954d8572d3c8c6022f628ce2d38a1a04aae1b7f2d5300",
+          "details": {
+            "parent_model": "",
+            "format": "gguf",
+            "family": "qwen3vl",
+            "families": [
+              "qwen3vl"
+            ],
+            "parameter_size": "2.1B",
+            "quantization_level": "Q4_K_M"
+          },
+          "expires_at": "2026-09-20T02:12:17.534748+08:00",
+          "size_vram": 5468061694,
+          "context_length": 32768
+        }
+      ]
+    },
+    "api_ps_after": {
+      "models": [
+        {
+          "name": "qwen3-vl:2b-instruct",
+          "model": "qwen3-vl:2b-instruct",
+          "size": 5468061694,
+          "digest": "ea422f1e73652a95479954d8572d3c8c6022f628ce2d38a1a04aae1b7f2d5300",
+          "details": {
+            "parent_model": "",
+            "format": "gguf",
+            "family": "qwen3vl",
+            "families": [
+              "qwen3vl"
+            ],
+            "parameter_size": "2.1B",
+            "quantization_level": "Q4_K_M"
+          },
+          "expires_at": "2026-09-20T02:12:32.569368+08:00",
+          "size_vram": 5468061694,
+          "context_length": 32768
+        }
+      ]
+    }
+  },
+  "request_contract": {
+    "model": "qwen3-vl:2b-instruct",
+    "request_count": 10,
+    "simultaneous_release": true,
+    "queue_inclusive_deadline_ms": 15000,
+    "ordered_frames_per_request": 6,
+    "frame_source": "existing synthetic ten-camera smoke evidence",
+    "frame_paths": [
+      "artifacts/qa-ten-camera-review-clean-20260919T175935Z/20260919T175935Z/evidence/058bca7c-1cf0-4dce-aa58-b309c26374c3/frames/00000000-1789840775.960747.jpg",
+      "artifacts/qa-ten-camera-review-clean-20260919T175935Z/20260919T175935Z/evidence/058bca7c-1cf0-4dce-aa58-b309c26374c3/frames/00000001-1789840776.464638.jpg",
+      "artifacts/qa-ten-camera-review-clean-20260919T175935Z/20260919T175935Z/evidence/058bca7c-1cf0-4dce-aa58-b309c26374c3/frames/00000002-1789840776.965474.jpg",
+      "artifacts/qa-ten-camera-review-clean-20260919T175935Z/20260919T175935Z/evidence/058bca7c-1cf0-4dce-aa58-b309c26374c3/frames/00000003-1789840777.463895.jpg",
+      "artifacts/qa-ten-camera-review-clean-20260919T175935Z/20260919T175935Z/evidence/058bca7c-1cf0-4dce-aa58-b309c26374c3/frames/00000004-1789840777.972738.jpg",
+      "artifacts/qa-ten-camera-review-clean-20260919T175935Z/20260919T175935Z/evidence/058bca7c-1cf0-4dce-aa58-b309c26374c3/frames/00000005-1789840778.465564.jpg"
+    ],
+    "context": {
+      "camera_id": "camera-01",
+      "kind": "station_absence",
+      "reason": "synthetic station ROI unoccupied for configured threshold",
+      "material_roi": [
+        0.0,
+        0.0,
+        1.0,
+        1.0
+      ],
+      "station_roi": [
+        0.0,
+        0.0,
+        1.0,
+        1.0
+      ],
+      "exit_line": [
+        [
+          0.8,
+          0.0
+        ],
+        [
+          0.8,
+          1.0
+        ]
+      ],
+      "absence_threshold_seconds": 4,
+      "observed_duration_seconds": 4
+    },
+    "reviewer": "factory_monitor.inference.OllamaReviewer"
+  },
+  "prewarm": {
+    "attempted": true,
+    "succeeded": true,
+    "schema_valid": true,
+    "decision": "supported",
+    "duration_ms": 15553.449708997505
+  },
+  "outcomes": {
+    "completed_schema_valid": 5,
+    "timeouts_right_censored": 5,
+    "errors": 0,
+    "completed_within_15000ms": 5,
+    "batch_duration_ms": 15127.630208007758,
+    "requests": [
+      {
+        "request_id": 0,
+        "status": "completed",
+        "schema_valid": true,
+        "decision": "supported",
+        "duration_ms": 11662.956666987156
+      },
+      {
+        "request_id": 1,
+        "status": "timeout",
+        "schema_valid": false,
+        "error": "local Ollama review timed out",
+        "duration_ms": 15000.829166994663,
+        "right_censored_at_ms": 15000
+      },
+      {
+        "request_id": 2,
+        "status": "timeout",
+        "schema_valid": false,
+        "error": "local Ollama review timed out",
+        "duration_ms": 15001.910542021506,
+        "right_censored_at_ms": 15000
+      },
+      {
+        "request_id": 3,
+        "status": "completed",
+        "schema_valid": true,
+        "decision": "supported",
+        "duration_ms": 5866.659583000001
+      },
+      {
+        "request_id": 4,
+        "status": "timeout",
+        "schema_valid": false,
+        "error": "local Ollama review timed out",
+        "duration_ms": 15007.11541698547,
+        "right_censored_at_ms": 15000
+      },
+      {
+        "request_id": 5,
+        "status": "completed",
+        "schema_valid": true,
+        "decision": "supported",
+        "duration_ms": 2929.881165997358
+      },
+      {
+        "request_id": 6,
+        "status": "completed",
+        "schema_valid": true,
+        "decision": "supported",
+        "duration_ms": 14594.967292010551
+      },
+      {
+        "request_id": 7,
+        "status": "timeout",
+        "schema_valid": false,
+        "error": "local Ollama review timed out",
+        "duration_ms": 15000.82966699847,
+        "right_censored_at_ms": 15000
+      },
+      {
+        "request_id": 8,
+        "status": "timeout",
+        "schema_valid": false,
+        "error": "local Ollama review timed out",
+        "duration_ms": 15012.26020802278,
+        "right_censored_at_ms": 15000
+      },
+      {
+        "request_id": 9,
+        "status": "completed",
+        "schema_valid": true,
+        "decision": "supported",
+        "duration_ms": 8758.040082990192
+      }
+    ]
+  },
+  "resource_observations": {
+    "sample_interval_ms": 100,
+    "sample_count": 129,
+    "peak_server_tree_rss_bytes": 6712066048,
+    "peak_server_tree_cpu_percent": null,
+    "cpu_percent_note": "The first-pass sampler did not retain process counters across samples, so its zero values were discarded.",
+    "minimum_system_available_memory_bytes": 8251162624,
+    "ollama_reported_model_vram_bytes": 5468061694,
+    "gpu_utilization_percent": null,
+    "gpu_utilization_note": "Unavailable from unprivileged macOS process/API telemetry; no value inferred."
+  },
+  "comparison_baseline": {
+    "source": "reports/qa-ten-camera-review-smoke.md",
+    "configuration": "one runtime review worker, same model, six ordered timestamped frames, 15-second queue-inclusive deadline",
+    "completed_within_15000ms": 1,
+    "timeouts": 9
+  },
+  "diagnosis": {
+    "runtime_worker_is_serial_by_code_inspection": true,
+    "requested_ollama_parallelism_honored": false,
+    "current_configuration_meets_ten_request_deadline": false,
+    "capacity_gain_attributable_to_parallelism": false,
+    "comparison_confounds": [
+      "diagnostic was prewarmed while the prior runtime smoke warm state was not established",
+      "all ten diagnostic requests repeated the same frames and context, maximizing prompt-cache reuse",
+      "the diagnostic bypassed the full runtime path"
+    ],
+    "mac_m5_32gb_true_parallel_capacity": "unproven because Ollama refused parallel Qwen3-VL execution",
+    "hardware_purchase_justified": false,
+    "minimum_zero_purchase_change": "not established by this trial"
+  },
+  "interpretation_guardrail": "Do not attribute the 1/10 versus 5/10 difference to parallelism: the effective runner had one slot, while this trial was prewarmed and repeated identical inputs that maximized prompt-cache reuse. This does not prove ten-camera end-to-end capacity."
+}

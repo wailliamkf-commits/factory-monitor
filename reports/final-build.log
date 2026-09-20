@@ -1,0 +1,176 @@
+* Creating isolated environment: venv+pip...
+* Installing packages in isolated environment:
+  - setuptools>=75
+* Getting build dependencies for sdist...
+running egg_info
+writing src/factory_monitor.egg-info/PKG-INFO
+writing dependency_links to src/factory_monitor.egg-info/dependency_links.txt
+writing entry points to src/factory_monitor.egg-info/entry_points.txt
+writing requirements to src/factory_monitor.egg-info/requires.txt
+writing top-level names to src/factory_monitor.egg-info/top_level.txt
+reading manifest file 'src/factory_monitor.egg-info/SOURCES.txt'
+writing manifest file 'src/factory_monitor.egg-info/SOURCES.txt'
+* Installed build dependency versions:
+  - setuptools==84.0.0
+* Building sdist...
+running sdist
+running egg_info
+writing src/factory_monitor.egg-info/PKG-INFO
+writing dependency_links to src/factory_monitor.egg-info/dependency_links.txt
+writing entry points to src/factory_monitor.egg-info/entry_points.txt
+writing requirements to src/factory_monitor.egg-info/requires.txt
+writing top-level names to src/factory_monitor.egg-info/top_level.txt
+reading manifest file 'src/factory_monitor.egg-info/SOURCES.txt'
+writing manifest file 'src/factory_monitor.egg-info/SOURCES.txt'
+running check
+creating factory_monitor-0.1.0
+creating factory_monitor-0.1.0/src/factory_monitor
+creating factory_monitor-0.1.0/src/factory_monitor.egg-info
+creating factory_monitor-0.1.0/src/factory_monitor/capture
+creating factory_monitor-0.1.0/src/factory_monitor/capture/assets
+creating factory_monitor-0.1.0/src/factory_monitor/gui
+creating factory_monitor-0.1.0/tests
+copying files to factory_monitor-0.1.0...
+copying README.md -> factory_monitor-0.1.0
+copying pyproject.toml -> factory_monitor-0.1.0
+copying src/factory_monitor/__init__.py -> factory_monitor-0.1.0/src/factory_monitor
+copying src/factory_monitor/__main__.py -> factory_monitor-0.1.0/src/factory_monitor
+copying src/factory_monitor/cli.py -> factory_monitor-0.1.0/src/factory_monitor
+copying src/factory_monitor/config.py -> factory_monitor-0.1.0/src/factory_monitor
+copying src/factory_monitor/evaluation.py -> factory_monitor-0.1.0/src/factory_monitor
+copying src/factory_monitor/evidence.py -> factory_monitor-0.1.0/src/factory_monitor
+copying src/factory_monitor/inference.py -> factory_monitor-0.1.0/src/factory_monitor
+copying src/factory_monitor/rules.py -> factory_monitor-0.1.0/src/factory_monitor
+copying src/factory_monitor/runtime.py -> factory_monitor-0.1.0/src/factory_monitor
+copying src/factory_monitor/store.py -> factory_monitor-0.1.0/src/factory_monitor
+copying src/factory_monitor/switching.py -> factory_monitor-0.1.0/src/factory_monitor
+copying src/factory_monitor.egg-info/PKG-INFO -> factory_monitor-0.1.0/src/factory_monitor.egg-info
+copying src/factory_monitor.egg-info/SOURCES.txt -> factory_monitor-0.1.0/src/factory_monitor.egg-info
+copying src/factory_monitor.egg-info/dependency_links.txt -> factory_monitor-0.1.0/src/factory_monitor.egg-info
+copying src/factory_monitor.egg-info/entry_points.txt -> factory_monitor-0.1.0/src/factory_monitor.egg-info
+copying src/factory_monitor.egg-info/requires.txt -> factory_monitor-0.1.0/src/factory_monitor.egg-info
+copying src/factory_monitor.egg-info/top_level.txt -> factory_monitor-0.1.0/src/factory_monitor.egg-info
+copying src/factory_monitor/capture/__init__.py -> factory_monitor-0.1.0/src/factory_monitor/capture
+copying src/factory_monitor/capture/control.py -> factory_monitor-0.1.0/src/factory_monitor/capture
+copying src/factory_monitor/capture/macos.py -> factory_monitor-0.1.0/src/factory_monitor/capture
+copying src/factory_monitor/capture/windows.py -> factory_monitor-0.1.0/src/factory_monitor/capture
+copying src/factory_monitor/capture/assets/ScreenCaptureKitHelper.swift -> factory_monitor-0.1.0/src/factory_monitor/capture/assets
+copying src/factory_monitor/gui/__init__.py -> factory_monitor-0.1.0/src/factory_monitor/gui
+copying src/factory_monitor/gui/app.py -> factory_monitor-0.1.0/src/factory_monitor/gui
+copying tests/test_capture.py -> factory_monitor-0.1.0/tests
+copying tests/test_cli.py -> factory_monitor-0.1.0/tests
+copying tests/test_core.py -> factory_monitor-0.1.0/tests
+copying tests/test_evidence.py -> factory_monitor-0.1.0/tests
+copying tests/test_gui_offscreen.py -> factory_monitor-0.1.0/tests
+copying tests/test_inference.py -> factory_monitor-0.1.0/tests
+copying tests/test_native_capture.py -> factory_monitor-0.1.0/tests
+copying tests/test_runtime.py -> factory_monitor-0.1.0/tests
+copying tests/test_view_control.py -> factory_monitor-0.1.0/tests
+Writing factory_monitor-0.1.0/setup.cfg
+Creating tar archive
+removing 'factory_monitor-0.1.0' (and everything under it)
+* Building wheel from sdist
+* Creating isolated environment: venv+pip...
+* Installing packages in isolated environment:
+  - setuptools>=75
+* Getting build dependencies for wheel...
+running egg_info
+writing src/factory_monitor.egg-info/PKG-INFO
+writing dependency_links to src/factory_monitor.egg-info/dependency_links.txt
+writing entry points to src/factory_monitor.egg-info/entry_points.txt
+writing requirements to src/factory_monitor.egg-info/requires.txt
+writing top-level names to src/factory_monitor.egg-info/top_level.txt
+reading manifest file 'src/factory_monitor.egg-info/SOURCES.txt'
+writing manifest file 'src/factory_monitor.egg-info/SOURCES.txt'
+* Installed build dependency versions:
+  - setuptools==84.0.0
+* Building wheel...
+running bdist_wheel
+running build
+running build_py
+creating build/lib/factory_monitor
+copying src/factory_monitor/store.py -> build/lib/factory_monitor
+copying src/factory_monitor/config.py -> build/lib/factory_monitor
+copying src/factory_monitor/evaluation.py -> build/lib/factory_monitor
+copying src/factory_monitor/switching.py -> build/lib/factory_monitor
+copying src/factory_monitor/__init__.py -> build/lib/factory_monitor
+copying src/factory_monitor/rules.py -> build/lib/factory_monitor
+copying src/factory_monitor/runtime.py -> build/lib/factory_monitor
+copying src/factory_monitor/cli.py -> build/lib/factory_monitor
+copying src/factory_monitor/inference.py -> build/lib/factory_monitor
+copying src/factory_monitor/evidence.py -> build/lib/factory_monitor
+copying src/factory_monitor/__main__.py -> build/lib/factory_monitor
+creating build/lib/factory_monitor/capture
+copying src/factory_monitor/capture/macos.py -> build/lib/factory_monitor/capture
+copying src/factory_monitor/capture/control.py -> build/lib/factory_monitor/capture
+copying src/factory_monitor/capture/__init__.py -> build/lib/factory_monitor/capture
+copying src/factory_monitor/capture/windows.py -> build/lib/factory_monitor/capture
+creating build/lib/factory_monitor/gui
+copying src/factory_monitor/gui/__init__.py -> build/lib/factory_monitor/gui
+copying src/factory_monitor/gui/app.py -> build/lib/factory_monitor/gui
+running egg_info
+writing src/factory_monitor.egg-info/PKG-INFO
+writing dependency_links to src/factory_monitor.egg-info/dependency_links.txt
+writing entry points to src/factory_monitor.egg-info/entry_points.txt
+writing requirements to src/factory_monitor.egg-info/requires.txt
+writing top-level names to src/factory_monitor.egg-info/top_level.txt
+reading manifest file 'src/factory_monitor.egg-info/SOURCES.txt'
+writing manifest file 'src/factory_monitor.egg-info/SOURCES.txt'
+creating build/lib/factory_monitor/capture/assets
+copying src/factory_monitor/capture/assets/ScreenCaptureKitHelper.swift -> build/lib/factory_monitor/capture/assets
+installing to build/bdist.macosx-11.0-arm64/wheel
+running install
+running install_lib
+creating build/bdist.macosx-11.0-arm64/wheel
+creating build/bdist.macosx-11.0-arm64/wheel/factory_monitor
+copying build/lib/factory_monitor/store.py -> build/bdist.macosx-11.0-arm64/wheel/./factory_monitor
+creating build/bdist.macosx-11.0-arm64/wheel/factory_monitor/capture
+copying build/lib/factory_monitor/capture/macos.py -> build/bdist.macosx-11.0-arm64/wheel/./factory_monitor/capture
+copying build/lib/factory_monitor/capture/control.py -> build/bdist.macosx-11.0-arm64/wheel/./factory_monitor/capture
+copying build/lib/factory_monitor/capture/__init__.py -> build/bdist.macosx-11.0-arm64/wheel/./factory_monitor/capture
+copying build/lib/factory_monitor/capture/windows.py -> build/bdist.macosx-11.0-arm64/wheel/./factory_monitor/capture
+creating build/bdist.macosx-11.0-arm64/wheel/factory_monitor/capture/assets
+copying build/lib/factory_monitor/capture/assets/ScreenCaptureKitHelper.swift -> build/bdist.macosx-11.0-arm64/wheel/./factory_monitor/capture/assets
+copying build/lib/factory_monitor/config.py -> build/bdist.macosx-11.0-arm64/wheel/./factory_monitor
+copying build/lib/factory_monitor/evaluation.py -> build/bdist.macosx-11.0-arm64/wheel/./factory_monitor
+copying build/lib/factory_monitor/switching.py -> build/bdist.macosx-11.0-arm64/wheel/./factory_monitor
+copying build/lib/factory_monitor/__init__.py -> build/bdist.macosx-11.0-arm64/wheel/./factory_monitor
+copying build/lib/factory_monitor/rules.py -> build/bdist.macosx-11.0-arm64/wheel/./factory_monitor
+copying build/lib/factory_monitor/runtime.py -> build/bdist.macosx-11.0-arm64/wheel/./factory_monitor
+copying build/lib/factory_monitor/cli.py -> build/bdist.macosx-11.0-arm64/wheel/./factory_monitor
+creating build/bdist.macosx-11.0-arm64/wheel/factory_monitor/gui
+copying build/lib/factory_monitor/gui/__init__.py -> build/bdist.macosx-11.0-arm64/wheel/./factory_monitor/gui
+copying build/lib/factory_monitor/gui/app.py -> build/bdist.macosx-11.0-arm64/wheel/./factory_monitor/gui
+copying build/lib/factory_monitor/inference.py -> build/bdist.macosx-11.0-arm64/wheel/./factory_monitor
+copying build/lib/factory_monitor/evidence.py -> build/bdist.macosx-11.0-arm64/wheel/./factory_monitor
+copying build/lib/factory_monitor/__main__.py -> build/bdist.macosx-11.0-arm64/wheel/./factory_monitor
+running install_egg_info
+Copying src/factory_monitor.egg-info to build/bdist.macosx-11.0-arm64/wheel/./factory_monitor-0.1.0-py3.12.egg-info
+running install_scripts
+creating build/bdist.macosx-11.0-arm64/wheel/factory_monitor-0.1.0.dist-info/WHEEL
+creating '<PROJECT>/dist/.tmp-njlaw7f2/factory_monitor-0.1.0-py3-none-any.whl' and adding 'build/bdist.macosx-11.0-arm64/wheel' to it
+adding 'factory_monitor/__init__.py'
+adding 'factory_monitor/__main__.py'
+adding 'factory_monitor/cli.py'
+adding 'factory_monitor/config.py'
+adding 'factory_monitor/evaluation.py'
+adding 'factory_monitor/evidence.py'
+adding 'factory_monitor/inference.py'
+adding 'factory_monitor/rules.py'
+adding 'factory_monitor/runtime.py'
+adding 'factory_monitor/store.py'
+adding 'factory_monitor/switching.py'
+adding 'factory_monitor/capture/__init__.py'
+adding 'factory_monitor/capture/control.py'
+adding 'factory_monitor/capture/macos.py'
+adding 'factory_monitor/capture/windows.py'
+adding 'factory_monitor/capture/assets/ScreenCaptureKitHelper.swift'
+adding 'factory_monitor/gui/__init__.py'
+adding 'factory_monitor/gui/app.py'
+adding 'factory_monitor-0.1.0.dist-info/METADATA'
+adding 'factory_monitor-0.1.0.dist-info/WHEEL'
+adding 'factory_monitor-0.1.0.dist-info/entry_points.txt'
+adding 'factory_monitor-0.1.0.dist-info/top_level.txt'
+adding 'factory_monitor-0.1.0.dist-info/RECORD'
+removing build/bdist.macosx-11.0-arm64/wheel
+Successfully built factory_monitor-0.1.0.tar.gz and factory_monitor-0.1.0-py3-none-any.whl

@@ -1,0 +1,25 @@
+{
+  "scope": "public sample model loading and inference only; NOT factory accuracy or ten-camera capacity",
+  "image_source": "https://raw.githubusercontent.com/ultralytics/assets/main/im/bus.jpg",
+  "image_sha256": "c02019c4979c191eb739ddd944445ef408dad5679acab6fd520ef9d434bfbc63",
+  "results": [
+    {
+      "device": "cpu",
+      "person_count": 4,
+      "image_inference_ms": [
+        10147.35,
+        22.64,
+        22.38
+      ]
+    },
+    {
+      "device": "mps",
+      "person_count": 4,
+      "image_inference_ms": [
+        2515.3,
+        13.34,
+        12.08
+      ]
+    }
+  ]
+}

@@ -1,0 +1,29 @@
+WARNING ⚠️ user config directory '<PROJECT>/runtime-data/ultralytics/Ultralytics' is not writable, using '/tmp/Ultralytics'. Set YOLO_CONFIG_DIR to override.
+Creating new Ultralytics Settings v0.0.8 file ✅ 
+View Ultralytics Settings with 'yolo settings' or at '/tmp/Ultralytics/settings.json'
+Update Settings with 'yolo settings key=value', i.e. 'yolo settings runs_dir=path/to/dir'. For help see https://docs.ultralytics.com/usage/settings.
+{
+  "scope": "public sample model loading and inference only; NOT factory accuracy or ten-camera capacity",
+  "image_source": "https://raw.githubusercontent.com/ultralytics/assets/main/im/bus.jpg",
+  "image_sha256": "c02019c4979c191eb739ddd944445ef408dad5679acab6fd520ef9d434bfbc63",
+  "results": [
+    {
+      "device": "cpu",
+      "person_count": 4,
+      "image_inference_ms": [
+        10147.35,
+        22.64,
+        22.38
+      ]
+    },
+    {
+      "device": "mps",
+      "person_count": 4,
+      "image_inference_ms": [
+        2515.3,
+        13.34,
+        12.08
+      ]
+    }
+  ]
+}

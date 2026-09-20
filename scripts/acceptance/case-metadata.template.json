@@ -1,0 +1,16 @@
+[
+  {
+    "id": "replace-with-unique-held-out-case-id",
+    "kind": "material_candidate",
+    "stage": "candidate",
+    "truth": "positive",
+    "outcome": "supported",
+    "candidate_latency_ms": 0.0,
+    "review_latency_ms": 0.0,
+    "camera_id": "CAM01",
+    "occurred_at": "YYYY-MM-DDTHH:MM:SSZ",
+    "source_type": "synthetic_or_actual_field",
+    "evidence_path_or_missing_range": "replace-with-reviewed-path-or-explicit-gap",
+    "reviewer": "replace-with-human-reviewer"
+  }
+]

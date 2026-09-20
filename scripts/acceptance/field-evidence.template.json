@@ -1,0 +1,21 @@
+{
+  "status": "NOT_PROVEN",
+  "target_os_runs": [
+    {
+      "operating_system": "Windows or macOS",
+      "actual_client_identity": "replace-with-locally-verified-client-and-version",
+      "capture_backend": "replace-with-observed-backend",
+      "permission_observed": "yes/no/not-recorded",
+      "layout_readback_evidence": "path-or-reference",
+      "ten_camera_duration_hours": 0,
+      "switch_cycles_verified": 0,
+      "switch_id_misbindings": 0,
+      "fault_evidence": [],
+      "camera_exposure_hours": {},
+      "final_false_alarms_by_camera": {},
+      "event_evidence_or_explicit_gaps": []
+    }
+  ],
+  "independent_reviewer": "replace-with-reviewer",
+  "reviewed_at": "YYYY-MM-DDTHH:MM:SSZ"
+}
