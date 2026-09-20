@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import time
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Any
 
 from .config import validate_config
@@ -88,7 +88,7 @@ class RuleEngine:
         self._state[camera_id] = self._new_state()
 
     def _active(self, camera: dict, timestamp: float) -> bool:
-        instant = datetime.fromtimestamp(timestamp).astimezone()
+        instant = datetime.fromtimestamp(timestamp, timezone.utc).astimezone()
         schedule = camera["schedule"]
         if instant.weekday() not in schedule["days"]:
             return False
