@@ -2,6 +2,10 @@
 
 ## 公开迁移回归
 
+代码提交 `379d7a9` 的 [双平台托管实测](https://github.com/wailliamkf-commits/factory-monitor/actions/runs/35515661344) 已通过：Windows 78 passed / 3 skipped，macOS 80 passed / 1 skipped；均通过安装、依赖检查、Ruff、测试、94 秒十路合成证据检查与 wheel/sdist 构建。Windows 10 段证据各 90.5 秒，Mac 各 90 秒，均读回成功。复核关闭，不构成模型延迟或识别精度证据。Windows 跳过 Mac helper 编译、非 Windows 主机报错检查与未下载的 YOLO 样本；Mac 仅跳过 YOLO 样本。
+
+首轮 Windows 测试失败（4 项同源错误）保留在 Actions 历史：早期 epoch 时间经 naive datetime 转换触发 Windows CRT 错误。修正为 UTC-aware 再转本地时区后，原测试不变并通过；没有降低门槛。
+
 本机 macOS：Windows BGR 提供方接口兼容修正后，全套 **81 passed in 12.81s**，Ruff 和差异检查通过。新增回归检查实际接口形状下的色彩通道与转换错误报告。Windows 安装脚本和托管双平台检查已配置；运行结果以公开提交的 GitHub Actions 记录为准。托管检查不包含现场画面、本地模型性能或 72 小时运行。
 
 ## 最终工程检查

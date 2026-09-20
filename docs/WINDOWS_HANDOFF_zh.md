@@ -108,7 +108,7 @@ $env:OLLAMA_MODELS = (Resolve-Path .\models\ollama)
 
 ## 已知限制与下一步证据
 
-- Windows 实机尚未验证；此交接未执行 Windows 安装、WGC、真实客户端或模型测试。
+- Windows 托管测试机已执行安装脚本、78 项回归和十路合成证据测试；[记录](https://github.com/wailliamkf-commits/factory-monitor/actions/runs/35515661344)。现场 Windows 电脑、真实 WGC 窗口、客户端和模型吞吐仍未验证。
 - 十个同时本地模型复核目前只有 1/10 在 15 秒内完成，9 个超时/删失；不能把模型或硬件称为达标。
 - 自动原生点击/放大/返回未交付；必须等客户端专用命中测试、遮挡与 DPI 证明及读回验证完成后另行评估。
 - 仍需 Windows 和 macOS 分别完成实际客户端校准、独立 50 正/100 负数据、正常班次误报暴露、100 次切换/故障和 72 小时十路证据。详见 [验收协议](ACCEPTANCE.md)。

@@ -11,7 +11,7 @@ Overall acceptance remains FAIL. Start with [the Chinese handoff](START_HERE_zh.
 
 For a clean Windows account, use the bounded [Windows handoff](docs/WINDOWS_HANDOFF_zh.md). It creates a Python 3.12 project-local environment but does not provide an installer, an `.exe`, model weights, live capture, or field acceptance.
 
-Use the project environment already prepared by the maintainer. The CLI never
+Prepare the project environment using the platform handoff first. The CLI never
 creates an environment or installs dependencies.
 
 ```bash
