@@ -5,6 +5,8 @@ description: Prepare or review the Factory Monitor Windows engineering-preview h
 
 # Factory Monitor Windows Handoff
 
+For staged field tests, read [the frozen test matrix](../../docs/superpowers/plans/2026-09-21-field-test-matrix.md) and copy `scripts/acceptance/session-record.template.json` into an ignored local run directory. Wait for the user's explicit start instruction before live capture. Begin with route A; conditional routes are experiments, not already implemented features. Preserve evidence and original latency deadlines when changing a route.
+
 Use this skill for a clean Windows-account setup, an operator-guided 1→3→10 camera trial, or review of the resulting local evidence. Read `STATUS.md`, `TEST_REPORT.md`, `START_HERE_zh.md`, and [the Windows handoff](../../docs/WINDOWS_HANDOFF_zh.md) before concluding readiness.
 
 Keep the work bounded to the engineering preview. Use Python 3.12 and the repository-local `.venv`; do not alter global Python, PATH, registry, execution policy, or existing configuration. The setup script may install Python dependencies, but it must not create/replace configuration, download model weights, start a local model, or start live capture.

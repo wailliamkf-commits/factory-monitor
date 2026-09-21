@@ -1,0 +1,69 @@
+{
+  "schema_version": 1,
+  "status": "NOT_STARTED",
+  "run_id": null,
+  "route_id": null,
+  "stage": null,
+  "start_instruction_received_at": null,
+  "started_at": null,
+  "ended_at": null,
+  "environment": {
+    "operating_system": null,
+    "os_build": null,
+    "client_name_and_version": null,
+    "cpu": null,
+    "ram_bytes": null,
+    "gpu_and_driver": null,
+    "free_disk_bytes": null,
+    "window_pixel_size": null,
+    "display_scale": null,
+    "capture_backend": null,
+    "camera_mapping_version": null,
+    "camera_ids": []
+  },
+  "versions": {
+    "baseline_commit": "379d7a9f3e536ed9823c0565a2c88a01d415b320",
+    "tested_commit": null,
+    "config_sha256": null,
+    "model_digests": {},
+    "dependency_snapshot_path": null,
+    "single_changed_variable": null
+  },
+  "data_boundary": {
+    "cloud_image_review_enabled": false,
+    "production_images_to_coding_agents": false,
+    "cross_host_review_authorized": false,
+    "source_type": null,
+    "dataset_split": null,
+    "case_manifest_path": null,
+    "local_data_directory": null
+  },
+  "observations": {
+    "candidate_p95_ms": null,
+    "review_p95_ms_including_queue": null,
+    "latency_origin_definition": "Material: first human-labelled recognizable source frame; absence: threshold reached in continuous observable active time. Never reset at enqueue or after switching.",
+    "camera_to_client_delay_ms": null,
+    "timestamp_alignment_method": null,
+    "cross_host_clock_uncertainty_ms": null,
+    "candidates": null,
+    "model_completed": null,
+    "timeouts": null,
+    "uncertain": null,
+    "errors": null,
+    "ten_simultaneous_case_results_path": null,
+    "per_camera_coverage_and_gap_log_path": null,
+    "per_stage_timings_path": null,
+    "cpu_gpu_memory_disk_timeseries_path": null,
+    "playback_results_path": null,
+    "retention_and_inflight_results_path": null,
+    "fault_and_recovery_results_path": null,
+    "human_labelled_evaluation_path": null
+  },
+  "decision": {
+    "step_status": "NOT_STARTED",
+    "field_gate": "FAIL",
+    "must_fix": ["No target-client test has run for this session."],
+    "rollback_version": null,
+    "next_step": "Wait for the user's start instruction and verify access on the target computer."
+  }
+}

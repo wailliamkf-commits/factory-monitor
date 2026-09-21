@@ -1,5 +1,7 @@
 # 状态（工程预览 v0.1）
 
+2026-09-21：已准备 [现场测试矩阵](docs/superpowers/plans/2026-09-21-field-test-matrix.md) 与会话记录模板。当前等待用户获得在线摄像头画面并明确下达开始指令；未启动新的现场采集、跨机服务或付费 API 调用。优化路线中尚未实现的组件须先通过各自工程检查，再进入现场对照；原验收门槛不变。
+
 **公开版本双平台工程检查已通过。** 代码提交 `379d7a9` 的 [GitHub Actions 实测](https://github.com/wailliamkf-commits/factory-monitor/actions/runs/35515661344)：Windows 78 passed / 3 skipped，macOS 80 passed / 1 skipped；两边均完成 94 秒十路合成并发证据检查及 wheel/sdist 构建。Windows 实际执行了 PowerShell 5.1 安装脚本。跳过项为平台专属检查与未随仓库发布的 YOLO 样本。真实 Windows 客户端、模型吞吐与现场 Gate 仍未通过。
 
 公开迁移准备：新增 Windows 安装脚本、交接技能和双平台 CI；修正 Windows 采集提供方的 BGR 转换接口。迁移修正后的本机回归为 **81 passed in 12.81s**，Ruff 与差异检查通过。以下 79 项结果及容量报告为此前工程基线；公开提交的托管检查以 GitHub Actions 为准，均不替代现场验收。见 [Windows 交接](docs/WINDOWS_HANDOFF_zh.md) 和 [公开发布边界](docs/PUBLICATION.md)。
