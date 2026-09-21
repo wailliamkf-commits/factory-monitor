@@ -1,5 +1,9 @@
 # 状态（工程预览 v0.1）
 
+2026-09-21 客户端补充：用户提供 Seetong 1.0.13.4 安装文件，RAR 全量读取及已解压 EXE 哈希一致；确认是 Windows 安装器，不能在当前 Apple M5 Mac 原生运行。苹果商店列出可供 Apple 芯片 Mac 获取的 iPad 版本，但十路显示与采集未验证。见 [Seetong 预检](docs/SEETONG_CLIENT_PREFLIGHT_zh.md)。尚未安装客户端、登录或读取摄像头，现场测试仍待开始指令。
+
+Laya 已完成 [资料及源代码评估](docs/LAYA_RESOURCE_ASSESSMENT_zh.md)，仅作为开发期合成/脱敏文字任务的可选影子分类候选；未下载权重、调用推理服务或接入监控，不能替代视觉复核或证明十五秒门槛达标。
+
 2026-09-21：已准备 [现场测试矩阵](docs/superpowers/plans/2026-09-21-field-test-matrix.md) 与会话记录模板。当前等待用户获得在线摄像头画面并明确下达开始指令；未启动新的现场采集、跨机服务或付费 API 调用。优化路线中尚未实现的组件须先通过各自工程检查，再进入现场对照；原验收门槛不变。
 
 **公开版本双平台工程检查已通过。** 代码提交 `379d7a9` 的 [GitHub Actions 实测](https://github.com/wailliamkf-commits/factory-monitor/actions/runs/35515661344)：Windows 78 passed / 3 skipped，macOS 80 passed / 1 skipped；两边均完成 94 秒十路合成并发证据检查及 wheel/sdist 构建。Windows 实际执行了 PowerShell 5.1 安装脚本。跳过项为平台专属检查与未随仓库发布的 YOLO 样本。真实 Windows 客户端、模型吞吐与现场 Gate 仍未通过。

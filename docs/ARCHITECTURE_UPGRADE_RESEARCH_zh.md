@@ -1,5 +1,7 @@
 # 架构升级调研（仅建议，2026-09-20）
 
+2026-09-21 新资源：[Laya 专项评估](LAYA_RESOURCE_ASSESSMENT_zh.md)。仅列入 OPTIONAL 的开发任务分流/日志分类影子对照；已核对本地推理代码和模型限制，未安装或接入实时监控链路。
+
 ## 结论
 
 当前 Gate 仍为 **FAIL**：真实 Windows/Mac 客户端、独立留出集、72 小时十路等证据未完成，不能宣称吞吐或成本收益。本轮最低成本路径不是更换模型或重写框架，而是先减少送入本地 Ollama 的像素/帧数并量化每阶段耗时。现有 `YoloPersonDetector` 按摄像头各建一个 YOLO 实例（`inference.py:58-68`）；review 只有一个串行进程、每候选最多 6 帧（`runtime.py:385-389, 502, 750`）。已有 schema 校验、checkpoint/健康事件、原始证据录像、队列 deadline；它们不是本次新增能力。
