@@ -9,6 +9,11 @@ client-specific input adapter with verified hit-testing and coordinate scaling.
 The measured ten-event local-model burst also misses the 15-second requirement.
 Overall acceptance remains FAIL. Start with [the Chinese handoff](START_HERE_zh.md).
 
+For an ongoing Windows test, versioned downloads, evidence handoff, updates and rollback,
+read the [stable operation procedure](docs/STABLE_OPERATION_zh.md) first. Target-device
+synthetic evidence gaps and shutdown failure remain unresolved; a documentation update
+is not a runtime fix.
+
 For a clean Windows account, use the bounded [Windows handoff](docs/WINDOWS_HANDOFF_zh.md). It creates a Python 3.12 project-local environment but does not provide an installer, an `.exe`, model weights, live capture, or field acceptance.
 
 Prepare the project environment using the platform handoff first. The CLI never

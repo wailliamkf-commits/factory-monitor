@@ -1,0 +1,147 @@
+{
+  "schema_version": 1,
+  "record_type": "STABILITY_RUN",
+  "status": "NOT_STARTED",
+  "run_id": null,
+  "stage": "UNKNOWN",
+  "session_record": {
+    "template_path": "scripts/acceptance/session-record.template.json",
+    "completed_record_path": null,
+    "same_run_id_required": true,
+    "note": "本文件补充稳定性/容量记录；不要复制会话记录模板中的环境、版本和现场 Gate 字段。"
+  },
+  "run_identity": {
+    "started_at": null,
+    "ended_at": null,
+    "operator": "UNKNOWN",
+    "mode": "UNKNOWN",
+    "source_type": "UNKNOWN",
+    "source_reference": null,
+    "source_sha256": null,
+    "exact_source_commit": null,
+    "source_download_sha256": null,
+    "workload_definition_reference": null,
+    "repository_commit_or_source_zip_sha256": null,
+    "working_tree_state": "UNKNOWN",
+    "config_sha256": null,
+    "environment_snapshot_path": null,
+    "detector_backend": "UNKNOWN",
+    "local_review_enabled": "UNKNOWN"
+  },
+  "repair_candidate_intake": {
+    "isolated_repair_copy_path": null,
+    "runtime_patch_paths": [],
+    "test_tool_paths": [],
+    "long_run_log_media_exit_paths": [],
+    "original_install_changed": "UNKNOWN",
+    "audit_status": "NOT_STARTED",
+    "evidence_gaps": []
+  },
+  "workload_and_exposure": {
+    "scheduled_duration_seconds": null,
+    "actual_duration_seconds": null,
+    "camera_count_expected": 10,
+    "camera_count_observed": null,
+    "simultaneous_event_bursts_expected": null,
+    "simultaneous_event_bursts_observed": null,
+    "load_fixture_status": "UNKNOWN",
+    "retention_cap_configured": null,
+    "events_produced_for_retention_test": null,
+    "retention_ledger_path": null,
+    "inflight_pressure_exercised": "UNKNOWN",
+    "no_event_observation_only": "UNKNOWN",
+    "expected_candidate_count": null,
+    "observed_candidate_count": null,
+    "expected_review_count": null,
+    "observed_review_count": null,
+    "notes": null,
+    "retention_cap_required": 20
+  },
+  "per_camera_coverage": {
+    "scheduled_observable_seconds_by_camera_path": null,
+    "actual_observable_seconds_by_camera_path": null,
+    "gap_intervals_by_camera_path": null,
+    "gap_interval_rules": "每个区间写开始、结束、时长和一个或多个原因标签；统计缺口秒数时按区间并集去重，主原因/去重规则不得删除其他原因标签。",
+    "unavailable_or_reset_absence_handling": "UNKNOWN",
+    "coverage_summary": "UNKNOWN"
+  },
+  "event_and_loss_accounting": {
+    "measurement_method_reference": null,
+    "queue_counters": {
+      "attempted_new": null,
+      "accepted_new": null,
+      "rejected_new": null,
+      "evicted_old": null,
+      "consumed": null,
+      "remaining": null,
+      "shutdown_discarded": null
+    },
+    "reconciliation": "UNKNOWN",
+    "loss_or_gap_intervals_path": null,
+    "counter_finality": "UNKNOWN",
+    "note": "没有最终账目时写 UNKNOWN；不得把旧版累计 81 当作精确或严格下限的丢帧数。"
+  },
+  "latency": {
+    "raw_samples_path": null,
+    "clock_alignment_method": "UNKNOWN",
+    "candidate_latency_including_queue": {
+      "denominator": null,
+      "completed": null,
+      "timeouts": null,
+      "unknown_or_missed": null,
+      "errors": null,
+      "p95_ms": null
+    },
+    "review_latency_including_queue": {
+      "denominator": null,
+      "completed": null,
+      "timeouts": null,
+      "unknown_or_missed": null,
+      "errors": null,
+      "p95_ms": null
+    }
+  },
+  "evidence_integrity": {
+    "expected_media_count": null,
+    "observed_media_count": null,
+    "full_decode_status": "UNKNOWN",
+    "actual_frame_timestamp_manifest_path": null,
+    "media_playback_and_duration_results_path": null,
+    "gap_results_path": null,
+    "eviction_decode_and_ledger_status": "UNKNOWN",
+    "recording_status_summary": "UNKNOWN",
+    "integrity_summary": "UNKNOWN",
+    "note": "recording_status=complete 只表示封装完成；完整证据须逐帧解码、时间戳和间隙均已审计。"
+  },
+  "resources": {
+    "raw_cpu_ram_disk_timeseries_path": null,
+    "process_tree_samples_path": null,
+    "disk_and_filesystem_snapshot_path": null,
+    "trend_summary": "UNKNOWN"
+  },
+  "stop_and_recovery": {
+    "stop_requested_at": null,
+    "stop_reason": null,
+    "drain_completed_at": null,
+    "worker_exit_records_path": null,
+    "process_exit_codes_path": null,
+    "residual_process_check_path": null,
+    "final_queue_counter_path": null,
+    "forced_termination": "UNKNOWN",
+    "recovery_action": "NONE_OR_UNKNOWN",
+    "recovery_result": "UNKNOWN",
+    "manual_health_observation_path": null
+  },
+  "acceptance": {
+    "stage_result": "NOT_STARTED",
+    "field_gate": "FAIL",
+    "field_gate_reason": "默认 FAIL；持续时间、无事件观察、状态 complete 或用户报告均不构成现场通过。",
+    "unknowns": [
+      "运行尚未开始；所有未测容量、覆盖、丢失、延迟、媒体完整性和恢复能力必须保留为 UNKNOWN。"
+    ],
+    "must_fix_or_verify": [],
+    "next_stage": null,
+    "reviewed_by": null,
+    "reviewed_at": null
+  }
+}
