@@ -1,5 +1,11 @@
 # 测试与证据报告
 
+## 2026-09-22 目标 Windows 提供的失败证据
+
+用户交付十路合成复测包，本轮在 Mac 上进行离线审计，没有重跑 Windows 或执行附件脚本。包内清单 1,059 文件哈希全部通过；baseline 记录的 33 项源码与 `4abaa0b`、`8f3ae84` 一致。十段媒体完整解码均为 101 帧、2 FPS、50.5 秒，源时间跨度约 90.988 秒且有 35 个相同缺口；在各自首尾窗口内，检测有 183 个源时间点，证据仅保留 101 个。采集进程 stopped 后仍被强制终止为 -15，另两进程退出 0。
+
+原日志计数 81 只能描述 `_put_bounded` 返回 False 的已上报累计结果；该路径混合替换旧包、拒收新包及可能无真实丢失的重试，不能视为实际丢包的精确数或严格下限。evidence 的 65.328 CPU 秒是采样窗口差值，非完整生命周期计量。详细核验、代码假设、待执行的 P0—P3 见 [复测审计](docs/WINDOWS_RETEST_AUDIT_2026-09-22_zh.md)。**目标设备合成容量 FAIL**；现场、YOLO/Qwen 和 Seetong 均未在该包中测试。以下 CI 通过是历史、不同环境证据，不能覆盖此次失败。
+
 ## 公开迁移回归
 
 代码提交 `379d7a9` 的 [双平台托管实测](https://github.com/wailliamkf-commits/factory-monitor/actions/runs/35515661344) 已通过：Windows 78 passed / 3 skipped，macOS 80 passed / 1 skipped；均通过安装、依赖检查、Ruff、测试、94 秒十路合成证据检查与 wheel/sdist 构建。Windows 10 段证据各 90.5 秒，Mac 各 90 秒，均读回成功。复核关闭，不构成模型延迟或识别精度证据。Windows 跳过 Mac helper 编译、非 Windows 主机报错检查与未下载的 YOLO 样本；Mac 仅跳过 YOLO 样本。
