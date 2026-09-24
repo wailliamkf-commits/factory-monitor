@@ -12,6 +12,7 @@ $python=Join-Path $candidate '.venv\Scripts\python.exe'
 if (-not (Test-Path -LiteralPath $python)) { throw 'Run Prepare-Candidate first.' }
 $env:PYTHONPATH=Join-Path $candidate 'src'
 $env:YOLO_CONFIG_DIR=Join-Path $candidate 'runtime\yolo-settings'
+$env:YOLO_OFFLINE='true'
 $reports=Join-Path $candidate 'reports\local\windows-validation'
 New-Item -ItemType Directory -Path $reports -Force | Out-Null
 $config=Join-Path $candidate 'runtime\monitor.json'
