@@ -31,6 +31,7 @@ class _Recording:
     preview_path: Path | None = None
     open_gap_start: float | None = None
     gap_reasons: list[dict[str, Any]] = field(default_factory=list)
+    source_frames: list[dict[str, Any]] = field(default_factory=list)
 
 
 class EvidenceRecorder:
@@ -56,23 +57,29 @@ class EvidenceRecorder:
         self.max_inflight = int(max_inflight)
         self.max_disk_bytes = int(max_disk_mb * 1024 * 1024)
         # JPEG-compressed cache avoids retaining 30 seconds of raw 4K arrays.
-        self._cache: dict[str, deque[tuple[float, bytes]]] = defaultdict(deque)
+        self._cache: dict[str, deque[tuple[float, bytes, dict[str, Any]]]] = defaultdict(deque)
         self._cache_bytes = 0
         self._max_cache_bytes = max(1024 * 1024, min(self.max_disk_bytes // 10, 512 * 1024 * 1024))
         self._active: dict[str, _Recording] = {}
         self._updates: deque[dict[str, Any]] = deque()
 
-    def ingest(self, camera_id: str, timestamp: float, image: np.ndarray) -> None:
+    def ingest(self, camera_id: str, timestamp: float, image: np.ndarray, *, run_id: str | None = None, frame_id: int | None = None) -> None:
         encoded_ok, encoded = cv2.imencode(".jpg", image, [cv2.IMWRITE_JPEG_QUALITY, 82])
         if not encoded_ok:
             encoded_bytes = b""
         else:
             encoded_bytes = encoded.tobytes()
         cache = self._cache[camera_id]
-        cache.append((timestamp, encoded_bytes))
+        identity = {"run_id": run_id, "frame_id": frame_id, "camera_id": camera_id}
+        cache.append((timestamp, encoded_bytes, identity))
         self._cache_bytes += len(encoded_bytes)
-        while cache and cache[0][0] < timestamp - self.pre_seconds:
-            _, expired = cache.popleft()
+        # A start command and its source frame travel through separate queues.
+        # Retain one sampling interval of command-arrival grace, plus the real
+        # boundary predecessor. This does not extend the event's requested
+        # window or byte cap; longer delays must still disclose missing frames.
+        cache_cutoff = timestamp - self.pre_seconds - 1.0 / self.fps
+        while len(cache) > 1 and cache[1][0] <= cache_cutoff:
+            _, expired, _ = cache.popleft()
             self._cache_bytes -= len(expired)
         self._trim_cache()
         for event_id, recording in list(self._active.items()):
@@ -81,7 +88,7 @@ class EvidenceRecorder:
             if self._disk_usage() >= self.max_disk_bytes:
                 self._mark_incomplete(event_id, "evidence disk limit reached during recording")
                 continue
-            self._append_encoded(recording, timestamp, encoded_bytes)
+            self._append_encoded(recording, timestamp, encoded_bytes, identity)
             trigger = float(recording.event["triggered_at"])
             if recording.preview_path is None and timestamp >= trigger + self.preview_seconds:
                 preview = recording.directory / "preview.jpg"
@@ -105,13 +112,30 @@ class EvidenceRecorder:
         recording = _Recording(dict(event), directory)
         self._active[event_id] = recording
         cutoff = float(event["triggered_at"]) - self.pre_seconds
-        cached = [(timestamp, encoded) for timestamp, encoded in self._cache.get(str(event["camera_id"]), ()) if timestamp >= cutoff]
-        if not cached or cached[0][0] > cutoff + max(1.0 / self.fps * 1.75, 0.25):
-            gap_end = cached[0][0] if cached else float(event["triggered_at"])
-            recording.gaps.append([cutoff, gap_end])
-            recording.gap_reasons.append({"start": cutoff, "end": gap_end, "reason": "requested pre-event window unavailable"})
-        for timestamp, encoded in cached:
-            self._append_encoded(recording, timestamp, encoded)
+        predecessor: tuple[float, bytes, dict[str, Any]] | None = None
+        cached: list[tuple[float, bytes, dict[str, Any]]] = []
+        for timestamp, encoded, identity in self._cache.get(str(event["camera_id"]), ()):
+            if timestamp <= cutoff:
+                if predecessor is None or timestamp >= predecessor[0]:
+                    predecessor = (timestamp, encoded, identity)
+            else:
+                cached.append((timestamp, encoded, identity))
+        boundary_tolerance = 0.5 / self.fps
+        following_distance = cached[0][0] - cutoff if cached else float("inf")
+        if (
+            predecessor is not None
+            and cutoff - predecessor[0] <= boundary_tolerance
+            and cutoff - predecessor[0] < following_distance
+        ):
+            cached.insert(0, predecessor)
+        if not cached or abs(cached[0][0] - cutoff) > boundary_tolerance:
+            # The first retained frame may arrive after the trigger. Keep the
+            # entire unavailable prefix open until that frame is on disk.
+            recording.open_gap_start = cutoff
+            recording.gaps.append([cutoff, None])
+            recording.gap_reasons.append({"start": cutoff, "end": None, "reason": "requested pre-event window unavailable"})
+        for timestamp, encoded, identity in cached:
+            self._append_encoded(recording, timestamp, encoded, identity)
         self._write_manifest(recording)
         return {"ok": True, "reason": "recording", "evidence_path": str(directory)}
 
@@ -138,21 +162,30 @@ class EvidenceRecorder:
         encoded_ok, encoded = cv2.imencode(".jpg", image, [cv2.IMWRITE_JPEG_QUALITY, 82])
         self._append_encoded(recording, timestamp, encoded.tobytes() if encoded_ok else b"")
 
-    def _append_encoded(self, recording: _Recording, timestamp: float, encoded: bytes) -> None:
+    def _append_encoded(self, recording: _Recording, timestamp: float, encoded: bytes, identity: dict[str, Any] | None = None) -> None:
+        frame_path = recording.directory / "frames" / f"{len(recording.frames):08d}-{timestamp:.6f}.jpg"
+        if not encoded:
+            recording.gaps.append([timestamp, timestamp])
+            return
+        frame_path.write_bytes(encoded)
         if recording.open_gap_start is not None:
-            recording.gaps.append([recording.open_gap_start, timestamp])
+            if recording.gaps and recording.gaps[-1] == [recording.open_gap_start, None]:
+                recording.gaps[-1][1] = timestamp
+            else:
+                recording.gaps.append([recording.open_gap_start, timestamp])
             recording.gap_reasons[-1]["end"] = timestamp
             recording.open_gap_start = None
         if recording.last_timestamp is not None:
             expected = 1.0 / self.fps
             if timestamp - recording.last_timestamp > max(expected * 1.75, 0.25):
                 recording.gaps.append([recording.last_timestamp, timestamp])
-        frame_path = recording.directory / "frames" / f"{len(recording.frames):08d}-{timestamp:.6f}.jpg"
-        if not encoded:
-            recording.gaps.append([timestamp, timestamp])
-            return
-        frame_path.write_bytes(encoded)
         recording.frames.append((timestamp, frame_path))
+        recording.source_frames.append({
+            "run_id": (identity or {}).get("run_id"),
+            "frame_id": (identity or {}).get("frame_id"),
+            "camera_id": recording.event["camera_id"],
+            "timestamp": timestamp, "file": frame_path.name,
+        })
         recording.last_timestamp = timestamp
         self._write_manifest(recording)
 
@@ -162,7 +195,9 @@ class EvidenceRecorder:
             "camera_id": recording.event["camera_id"],
             "triggered_at": recording.event["triggered_at"],
             "recording_status": status,
+            "window_complete": (not recording.gaps) if status == "complete" else (False if status == "incomplete" else None),
             "frame_count": len(recording.frames),
+            "source_frames": recording.source_frames,
             "last_timestamp": recording.last_timestamp,
             "gaps": recording.gaps,
             "gap_reasons": recording.gap_reasons,
@@ -218,6 +253,7 @@ class EvidenceRecorder:
                 "evidence_path": str(clip_path),
                 "preview_path": str(recording.preview_path),
                 "gaps": recording.gaps,
+                "window_complete": not recording.gaps,
                 "completed_at": time.time(),
             }
         )
@@ -228,7 +264,8 @@ class EvidenceRecorder:
         if recording.last_timestamp is not None:
             recording.gaps.append([recording.last_timestamp, None])
         if recording.open_gap_start is not None:
-            recording.gaps.append([recording.open_gap_start, None])
+            if [recording.open_gap_start, None] not in recording.gaps:
+                recording.gaps.append([recording.open_gap_start, None])
             recording.gap_reasons[-1]["end"] = None
         self._write_manifest(recording, "incomplete", reason)
         self._updates.append(
@@ -239,6 +276,7 @@ class EvidenceRecorder:
                 "evidence_path": str(evidence_path or recording.directory),
                 "preview_path": str(recording.preview_path) if recording.preview_path else None,
                 "gaps": recording.gaps,
+                "window_complete": False,
                 "completed_at": time.time(),
                 "reason": reason,
             }
@@ -246,7 +284,27 @@ class EvidenceRecorder:
         del self._active[event_id]
 
     def _disk_usage(self) -> int:
-        return sum(path.stat().st_size for path in self.root.rglob("*") if path.is_file())
+        total = 0
+        pending = [self.root]
+        while pending:
+            directory = pending.pop()
+            try:
+                with os.scandir(directory) as entries:
+                    for entry in entries:
+                        try:
+                            if entry.is_dir(follow_symlinks=False):
+                                pending.append(Path(entry.path))
+                            elif entry.is_file(follow_symlinks=False):
+                                total += entry.stat(follow_symlinks=False).st_size
+                            elif entry.is_file():
+                                # Match Path.is_file() for a symlink to a regular file.
+                                total += entry.stat().st_size
+                        except (FileNotFoundError, NotADirectoryError):
+                            # Retention or an external actor removed the entry during this scan.
+                            continue
+            except (FileNotFoundError, NotADirectoryError):
+                continue
+        return total
 
     def _trim_cache(self) -> None:
         while self._cache_bytes > self._max_cache_bytes:
@@ -257,7 +315,7 @@ class EvidenceRecorder:
                     oldest_camera, oldest_timestamp = camera_id, frames[0][0]
             if oldest_camera is None:
                 break
-            _, expired = self._cache[oldest_camera].popleft()
+            _, expired, _ = self._cache[oldest_camera].popleft()
             self._cache_bytes -= len(expired)
 
 
@@ -274,11 +332,66 @@ def recover_interrupted_evidence(evidence_dir: str | Path) -> list[dict[str, Any
         if payload.get("recording_status") != "recording":
             continue
         payload["recording_status"] = "incomplete"
+        payload["window_complete"] = False
         payload["reason"] = "interrupted recording recovered at startup"
         gaps = list(payload.get("gaps") or [])
-        gaps.append([payload.get("last_timestamp"), None])
+        if not gaps or gaps[-1][1] is not None:
+            gaps.append([payload.get("last_timestamp"), None])
         payload["gaps"] = gaps
         payload["completed_at"] = time.time()
         _atomic_json(manifest_path, payload)
         recovered.append(payload)
     return recovered
+
+
+def terminalize_incomplete_event(
+    evidence_dir: str | Path,
+    event: dict[str, Any],
+    reason: str,
+) -> dict[str, Any]:
+    """Persist an event-level shutdown failure after its worker is no longer alive."""
+    event_id = str(event["id"])
+    directory = Path(evidence_dir) / event_id
+    directory.mkdir(parents=True, exist_ok=True)
+    manifest_path = directory / "manifest.json"
+    payload: dict[str, Any] = {}
+    if manifest_path.is_file():
+        try:
+            payload = json.loads(manifest_path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            payload = {}
+    gaps = list(payload.get("gaps") or event.get("gaps") or [])
+    gap_start = payload.get("last_timestamp")
+    if gap_start is None:
+        gap_start = event.get("triggered_at")
+    terminal_gap = [gap_start, None]
+    if not gaps or gaps[-1] != terminal_gap:
+        gaps.append(terminal_gap)
+    gap_reasons = list(payload.get("gap_reasons") or [])
+    gap_reasons.append({"start": gap_start, "end": None, "reason": reason})
+    completed_at = time.time()
+    payload.update(
+        {
+            "event_id": event_id,
+            "camera_id": event.get("camera_id"),
+            "triggered_at": event.get("triggered_at"),
+            "recording_status": "incomplete",
+            "window_complete": False,
+            "frame_count": int(payload.get("frame_count") or 0),
+            "last_timestamp": payload.get("last_timestamp"),
+            "gaps": gaps,
+            "gap_reasons": gap_reasons,
+            "preview_path": payload.get("preview_path") or event.get("preview_path"),
+            "reason": reason,
+            "completed_at": completed_at,
+        }
+    )
+    _atomic_json(manifest_path, payload)
+    return {
+        "evidence_path": str(directory),
+        "preview_path": payload.get("preview_path"),
+        "gaps": gaps,
+        "window_complete": False,
+        "reason": reason,
+        "completed_at": completed_at,
+    }

@@ -9,10 +9,9 @@ client-specific input adapter with verified hit-testing and coordinate scaling.
 The measured ten-event local-model burst also misses the 15-second requirement.
 Overall acceptance remains FAIL. Start with [the Chinese handoff](START_HERE_zh.md).
 
-For an ongoing Windows test, versioned downloads, evidence handoff, updates and rollback,
-read the [stable operation procedure](docs/STABLE_OPERATION_zh.md) first. Target-device
-synthetic evidence gaps and shutdown failure remain unresolved; a documentation update
-is not a runtime fix.
+For the current Seetong investigation, use the [September 25 recovery handoff](docs/SEETONG_RECOVERY_2026-09-25_zh.md). This review branch imports the September 23 synthetic-evidence repairs and adds callback-time preservation plus a bounded metadata-only capture probe. The newer Windows functional copy has not been imported. Do not overwrite it with this branch. The reported display-target callback result is promising, but live video freshness, recognition, notifications and production acceptance remain unverified. See the [source intake audit](docs/reviews/2026-09-25-handoff-audit.md).
+
+For versioned downloads, evidence handoff, updates and rollback, read the [stable operation procedure](docs/STABLE_OPERATION_zh.md).
 
 For a clean Windows account, use the bounded [Windows handoff](docs/WINDOWS_HANDOFF_zh.md). It creates a Python 3.12 project-local environment but does not provide an installer, an `.exe`, model weights, live capture, or field acceptance.
 
