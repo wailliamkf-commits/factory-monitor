@@ -297,6 +297,7 @@ class MainWindow(QMainWindow):
         self.config = self._load_configuration()
         self.selected_camera = 0
         self._events: dict[str, dict[str, Any]] = {}
+        self._notified_analysis_status: dict[str, str] = {}
         self._last_health_messages: dict[str, tuple[str, str]] = {}
         self._last_store_reconcile = 0.0
         self._last_worker_summary = ""
@@ -362,6 +363,12 @@ class MainWindow(QMainWindow):
         self.grid_button.clicked.connect(self.return_grid)
         controls.addWidget(self.grid_button)
         outer.addLayout(controls)
+
+        self._notified_event_id: str | None = None
+        self.notification_button = QPushButton("暂无提醒")
+        self.notification_button.setEnabled(False)
+        self.notification_button.clicked.connect(self.open_notified_event)
+        outer.addWidget(self.notification_button)
 
         body = QSplitter(Qt.Horizontal)
         body.addWidget(self._make_monitor_panel())
@@ -945,11 +952,15 @@ class MainWindow(QMainWindow):
         elif kind == "analysis":
             event_id = str(message.get("event_id", ""))
             if event_id in self._events:
+                previous_status = self._notified_analysis_status.get(event_id)
                 event = {**self._events[event_id], **{
                     key: value for key, value in message.items()
                     if key not in {"type", "event_id"}
                 }}
-                self.upsert_event(event, alert=message.get("analysis_status") in {"uncertain", "timeout", "error"})
+                status = message.get("analysis_status")
+                self.upsert_event(event, alert=status != previous_status and status in {
+                    "supported", "dismissed", "uncertain", "timeout", "error"
+                })
             else:
                 self.log(f"分析更新缺少候选事件 {event_id}；保留运行时错误/状态供检查。")
         elif kind == "error":
@@ -984,11 +995,44 @@ class MainWindow(QMainWindow):
                 for item in self._events.values()
             ))
         if alert:
-            if event.get("analysis_status") in {"uncertain", "timeout", "error"}:
+            self._notified_event_id = event_id
+            if event.get("analysis_status") in {"supported", "dismissed", "uncertain", "timeout", "error"}:
+                self._notified_analysis_status[event_id] = event["analysis_status"]
+            kind_label = {"material_candidate": "物料候选", "station_absence": "工位无人候选"}.get(
+                event.get("kind"), "事件候选"
+            )
+            state_label = {
+                "pending": "等待模型复核", "supported": "模型支持，待人工确认",
+                "dismissed": "模型未支持，待人工确认", "uncertain": "模型无法确定",
+                "timeout": "模型超时，请人工查看", "error": "模型异常，请人工查看",
+            }.get(event.get("analysis_status", "pending"), "请人工查看")
+            self.notification_button.setText(
+                f"查看最新提醒 · {event.get('camera_id', '?')} · {kind_label} · {state_label}"
+            )
+            self.notification_button.setEnabled(True)
+            if event.get("analysis_status") in {"supported", "dismissed"}:
+                conclusion = "模型认为画面支持候选" if event["analysis_status"] == "supported" else "模型认为画面未支持候选"
+                self.notify_operator("视觉复核完成", f"{event.get('camera_id', '?')}：{conclusion}，请结合证据人工确认")
+            elif event.get("analysis_status") in {"uncertain", "timeout", "error"}:
                 self.notify_operator("需要人工复核", f"{event.get('camera_id', '?')} 的候选分析未确定：{event.get('analysis_status')}")
             else:
                 self.notify_operator("出现候选事件", f"{event.get('camera_id', '?')}：{event.get('kind', 'candidate')}，请人工复核")
         self._trim_visible_events()
+        if self.selected_event_id() == event_id:
+            self.show_selected_event()
+
+    def open_notified_event(self) -> None:
+        """Open the event named in the visible banner, never guess a camera click."""
+        for row in range(self.event_table.rowCount()):
+            item = self.event_table.item(row, 0)
+            if item and item.data(Qt.UserRole) == self._notified_event_id:
+                self.event_table.selectRow(row)
+                self.show_selected_event()
+                self.showNormal()
+                self.activateWindow()
+                return
+        self.notification_button.setText("此提醒已不在当前事件列表，请查看历史记录")
+        self.notification_button.setEnabled(False)
 
     @staticmethod
     def _is_finalized(event: dict[str, Any]) -> bool:
@@ -1002,6 +1046,7 @@ class MainWindow(QMainWindow):
         for event_id in list(self._events):
             if event_id not in keep:
                 del self._events[event_id]
+                self._notified_analysis_status.pop(event_id, None)
         for row in range(self.event_table.rowCount() - 1, -1, -1):
             item = self.event_table.item(row, 0)
             if not item or str(item.data(Qt.UserRole)) not in keep:

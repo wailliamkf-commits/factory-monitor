@@ -24,7 +24,7 @@ class WindowsGraphicsCapture:
         backend = config.get("backend", "auto")
         if backend != "display" and not title:
             raise CaptureError("WGC window capture requires an exact non-empty window_title")
-        self._frames: queue.Queue[tuple[float, np.ndarray]] = queue.Queue(maxsize=3)
+        self._frames: queue.Queue[tuple[float, float, np.ndarray]] = queue.Queue(maxsize=3)
         self._errors: queue.Queue[str] = queue.Queue()
         options: dict[str, Any] = {"cursor_capture": False, "draw_border": False}
         if backend == "display":
@@ -38,6 +38,7 @@ class WindowsGraphicsCapture:
         @self._capture.event
         def on_frame_arrived(frame: Frame, capture_control: InternalCaptureControl) -> None:
             try:
+                captured_wall, captured_monotonic = time.time(), time.monotonic()
                 converted = frame.convert_to_bgr()
                 array = np.asarray(converted.frame_buffer, dtype=np.uint8)
                 expected_shape = (converted.height, converted.width, 3)
@@ -45,13 +46,13 @@ class WindowsGraphicsCapture:
                     raise ValueError(f"Windows Graphics Capture BGR frame has shape {array.shape}, expected {expected_shape}")
                 bgr = array.copy()
                 try:
-                    self._frames.put_nowait((time.monotonic(), bgr))
+                    self._frames.put_nowait((captured_wall, captured_monotonic, bgr))
                 except queue.Full:
                     try:
                         self._frames.get_nowait()
                     except queue.Empty:
                         pass
-                    self._frames.put_nowait((time.monotonic(), bgr))
+                    self._frames.put_nowait((captured_wall, captured_monotonic, bgr))
             except Exception as exc:
                 self._errors.put(str(exc))
 
@@ -72,11 +73,11 @@ class WindowsGraphicsCapture:
         if error:
             raise CaptureError(error)
         try:
-            captured_monotonic, image = self._frames.get(timeout=3)
+            captured_wall, captured_monotonic, image = self._frames.get(timeout=3)
         except queue.Empty as exc:
             raise CaptureError("Windows Graphics Capture produced no frame; check permission and selected source") from exc
         return {
-            "timestamp": time.time(),
+            "timestamp": captured_wall,
             "monotonic": captured_monotonic,
             "image": image,
             "source": "live",

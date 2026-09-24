@@ -317,6 +317,50 @@ def test_candidate_and_manual_review_states_notify_and_health_logs_are_bounded(w
     assert window.diagnostics.document().blockCount() <= window.MAX_DIAGNOSTIC_BLOCKS
 
 
+@pytest.mark.parametrize("decision", ["supported", "dismissed"])
+def test_completed_visual_review_notifies_once_without_claiming_theft(window: MainWindow, decision: str):
+    event = {"id": "review-done", "camera_id": "CAM01", "kind": "material_candidate",
+             "triggered_at": 1, "analysis_status": "pending", "review_label": "pending"}
+    window.handle_runtime_message({"type": "candidate", "event": event})
+    before = len(window._test_notifications)
+    message = {"type": "analysis", "event_id": event["id"], "analysis_status": decision,
+               "analysis": {"reason": "Visible objects reviewed"}}
+    window.handle_runtime_message(message)
+    window.handle_runtime_message(message)
+
+    assert len(window._test_notifications) == before + 1
+    assert "复核" in window._test_notifications[-1][0]
+    assert "偷窃" not in window._test_notifications[-1][1]
+    assert window._events[event["id"]]["review_label"] == "pending"
+
+
+def test_visible_alert_opens_the_displayed_event_and_refreshes_analysis(window: MainWindow):
+    event = {"id": "click-review", "camera_id": "CAM02", "kind": "station_absence",
+             "triggered_at": 1, "analysis_status": "pending", "review_label": "pending"}
+    window.handle_runtime_message({"type": "candidate", "event": event})
+    assert "CAM02" in window.notification_button.text()
+    window.notification_button.click()
+    assert window.selected_event_id() == "click-review"
+    window.handle_runtime_message({"type": "analysis", "event_id": "click-review",
+                                   "analysis_status": "supported", "analysis": {"reason": "station is empty"}})
+    assert "station is empty" in window.event_details.toPlainText()
+
+
+def test_store_sync_before_analysis_message_does_not_suppress_completed_notification(window: MainWindow):
+    event = {"id": "db-before-message", "camera_id": "CAM01", "kind": "station_absence",
+             "triggered_at": 1, "analysis_status": "pending", "review_label": "pending"}
+    window.handle_runtime_message({"type": "candidate", "event": event})
+    before = len(window._test_notifications)
+    # The worker can persist its result between GUI poll and database reconciliation.
+    window.upsert_event({**event, "analysis_status": "supported"})
+    message = {"type": "analysis", "event_id": event["id"], "analysis_status": "supported",
+               "analysis": {"reason": "station is empty"}}
+    window.handle_runtime_message(message)
+    window.handle_runtime_message(message)
+    assert len(window._test_notifications) == before + 1
+    assert "模型支持" in window.notification_button.text()
+
+
 def test_reconcile_keeps_all_inflight_and_only_twenty_completed_events(window: MainWindow) -> None:
     store = EventStore(window.data_dir / "events.sqlite3")
     for index in range(25):
