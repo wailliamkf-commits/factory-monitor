@@ -106,3 +106,24 @@ def test_windows_capture_reports_provider_conversion_failure(monkeypatch: pytest
 
     with pytest.raises(CaptureError, match="provider conversion failed"):
         capture.read()
+
+
+def test_windows_capture_preserves_callback_time_before_conversion_and_delayed_read(monkeypatch: pytest.MonkeyPatch):
+    events = []
+
+    class TimedFrame(_BgrProviderFrame):
+        def convert_to_bgr(self):
+            events.append("convert")
+            return super().convert_to_bgr()
+
+    frame = TimedFrame(np.zeros((1, 1, 4), dtype=np.uint8))
+    _mock_windows_capture_provider(monkeypatch, frame)
+    monkeypatch.setattr(windows_module.time, "time", lambda: (events.append("wall"), 200.0 if "convert" in events else 100.0)[1])
+    monkeypatch.setattr(windows_module.time, "monotonic", lambda: (events.append("mono"), 20.0 if "convert" in events else 10.0)[1])
+
+    capture = WindowsGraphicsCapture({"backend": "display", "display_index": 0})
+    result = capture.read()
+
+    assert result["timestamp"] == 100.0
+    assert result["monotonic"] == 10.0
+    assert events[:3] == ["wall", "mono", "convert"]

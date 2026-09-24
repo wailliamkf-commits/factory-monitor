@@ -16,7 +16,7 @@ import pytest
 pytest.importorskip("PySide6")
 
 from PySide6.QtCore import QPoint, Qt
-from PySide6.QtGui import QColor, QImage, QPainter
+from PySide6.QtGui import QColor, QCloseEvent, QImage, QPainter
 from PySide6.QtTest import QTest
 from PySide6.QtWidgets import QApplication
 
@@ -54,6 +54,26 @@ class RuntimeProbe:
 
     def return_grid(self) -> dict:
         return {"ok": False, "reason": "automatic view control is uncalibrated"}
+
+
+class StopStatusProbe:
+    def __init__(self, *, running: bool, confirmed: bool) -> None:
+        self.running = running
+        self.confirmed = confirmed
+
+    def stop(self) -> None:
+        pass
+
+    def status(self) -> dict:
+        return {
+            "running": self.running,
+            "last_stop": {
+                "confirmed": self.confirmed,
+                "alive_workers": ["evidence"] if self.running else [],
+                "affected_event_ids": ["evt-stop"] if not self.confirmed else [],
+                "reasons": ["synthetic stop not confirmed"] if not self.confirmed else [],
+            },
+        }
 
 
 @pytest.fixture(scope="session")
@@ -101,6 +121,30 @@ def test_demo_labels_remain_explicitly_synthetic(window: MainWindow) -> None:
     assert window.camera_tiles.count() == 10
     assert window.camera_tiles.itemAtPosition(0, 3) is not None
     assert window.camera_tiles.itemAtPosition(2, 1) is not None
+
+
+def test_close_is_rejected_while_stop_still_reports_a_live_worker(window: MainWindow) -> None:
+    window.runtime = StopStatusProbe(running=True, confirmed=False)
+    event = QCloseEvent()
+
+    window.closeEvent(event)
+
+    assert event.isAccepted() is False
+    assert "停止收尾不完整" in window.status_label.text()
+    window.runtime = None
+
+
+@pytest.mark.parametrize("confirmed", [True, False])
+def test_close_is_allowed_after_workers_exit_even_if_the_stop_report_is_incomplete(
+    window: MainWindow, confirmed: bool
+) -> None:
+    window.runtime = StopStatusProbe(running=False, confirmed=confirmed)
+    event = QCloseEvent()
+
+    window.closeEvent(event)
+
+    assert event.isAccepted() is True
+    window.runtime = None
 
 
 def test_camera_tile_letterboxes_frames_without_distorting_aspect(window: MainWindow) -> None:
@@ -288,18 +332,24 @@ def test_selected_event_exposes_gaps_and_requests_system_open_only_for_existing_
     event = {"id": "evt-evidence", "camera_id": "CAM01", "kind": "station_absence", "triggered_at": 1,
              "status": "incomplete", "reason": "absence", "layout_version": 1, "evidence_path": str(evidence),
              "analysis": {"error": "review unavailable"}, "gaps": [[10.0, 12.5], [15.0, None], {"start": 20.0, "end": None, "reason": "capture stalled"}],
-             "recording_status": "incomplete"}
+             "recording_status": "incomplete", "window_complete": False}
     window.upsert_event(event)
     window.event_table.selectRow(0)
     assert "10.000–12.500" in window.event_details.toPlainText()
     assert "capture stalled" in window.event_details.toPlainText()
+    assert "时间窗完整：否" in window.event_details.toPlainText()
     assert "不以此界面声明" in window.event_details.toPlainText()
     QTest.mouseClick(window.open_evidence_button, Qt.LeftButton)
     assert window._test_opened == [evidence]
 
-    window.upsert_event({**event, "id": "evt-missing", "evidence_path": str(tmp_path / "missing.mp4")})
+    window.upsert_event({**event, "window_complete": True, "gaps": []})
+    window.event_table.selectRow(0)
+    assert "时间窗完整：是" in window.event_details.toPlainText()
+
+    window.upsert_event({**event, "id": "evt-missing", "evidence_path": str(tmp_path / "missing.mp4"), "window_complete": None})
     window.event_table.selectRow(1)
     assert not window.open_evidence_button.isEnabled()
+    assert "时间窗完整：待确认" in window.event_details.toPlainText()
     assert "缺失" in window.evidence_label.text()
 
 

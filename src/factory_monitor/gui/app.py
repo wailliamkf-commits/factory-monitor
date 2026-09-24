@@ -862,13 +862,37 @@ class MainWindow(QMainWindow):
         self.poll_timer.start(250)
 
     def stop_runtime(self) -> None:
+        stop_error: Exception | None = None
+        runtime_status: dict[str, Any] = {}
         if self.runtime:
             try:
                 self.runtime.stop()
             except Exception as exc:
+                stop_error = exc
                 self.log(f"停止时错误：{exc}")
-        self.poll_timer.stop()
-        self._set_running(False)
+            try:
+                runtime_status = self.runtime.status()
+            except Exception as exc:
+                stop_error = stop_error or exc
+                self.log(f"停止状态读取失败：{exc}")
+        still_running = bool(runtime_status.get("running", stop_error is not None))
+        if still_running:
+            self.poll_timer.start(250)
+        else:
+            self.poll_timer.stop()
+        self._set_running(still_running)
+        self._stop_safe_to_close = stop_error is None and not still_running
+        report = runtime_status.get("last_stop") or {}
+        if stop_error is not None:
+            self.status_label.setText(f"停止未确认：{stop_error}；请查看诊断并重试。")
+            return
+        if report and not report.get("confirmed", False):
+            alive = ", ".join(report.get("alive_workers") or []) or "无"
+            affected = ", ".join(report.get("affected_event_ids") or []) or "无"
+            reasons = "; ".join(report.get("reasons") or ["停止协议未确认"])
+            self.status_label.setText(f"停止收尾不完整：存活进程={alive}；受影响事件={affected}。")
+            self.log(f"停止协议未确认：{reasons}")
+            return
         self.status_label.setText("已停止；现在可修改并保存配置。")
 
     def _set_running(self, running: bool) -> None:
@@ -989,6 +1013,8 @@ class MainWindow(QMainWindow):
             else:
                 self.notify_operator("出现候选事件", f"{event.get('camera_id', '?')}：{event.get('kind', 'candidate')}，请人工复核")
         self._trim_visible_events()
+        if self.selected_event_id() == event_id:
+            self.show_selected_event()
 
     @staticmethod
     def _is_finalized(event: dict[str, Any]) -> bool:
@@ -1058,6 +1084,7 @@ class MainWindow(QMainWindow):
             f"规则原因：{event.get('reason', '未知')}\n"
             f"分析状态：{event.get('analysis_status', 'pending')}；{analysis_reason}\n"
             f"录制状态：{event.get('recording_status', event.get('status', 'unknown'))}\n"
+            f"时间窗完整：{('是' if event['window_complete'] else '否') if event.get('window_complete') is not None else '待确认'}\n"
             f"时间轴缺口：{gap_text}\n"
             "时间为本地记录时间；缺口表示缺少帧，不以此界面声明视频已被系统 codec 成功播放。"
         )
@@ -1155,6 +1182,10 @@ class MainWindow(QMainWindow):
 
     def closeEvent(self, event: Any) -> None:
         self.stop_runtime()
+        if not getattr(self, "_stop_safe_to_close", False):
+            event.ignore()
+            self.log("关窗已阻止：停止尚未安全确认，请保留窗口并重试。")
+            return
         super().closeEvent(event)
 
 
