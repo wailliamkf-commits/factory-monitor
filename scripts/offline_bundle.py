@@ -76,7 +76,9 @@ def _scan_files(root: Path) -> dict[str, dict[str, Any]]:
             path = Path(entry.path)
             relative = path.relative_to(root).as_posix()
             try:
-                entry_stat = entry.stat(follow_symlinks=False)
+                # DirEntry.stat() returns zero st_dev/st_ino on Windows. Path.stat()
+                # performs the path-based stat needed to compare against fstat() below.
+                entry_stat = path.stat(follow_symlinks=False)
             except OSError as exc:
                 raise BundleError(f"cannot inspect {relative!r}: {exc}") from exc
 

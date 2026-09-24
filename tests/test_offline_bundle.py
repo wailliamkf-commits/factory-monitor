@@ -1,10 +1,13 @@
 import hashlib
 import json
+import os
 import subprocess
 import sys
+from types import SimpleNamespace
 from pathlib import Path
 
 import pytest
+from scripts import offline_bundle
 
 
 REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
@@ -168,6 +171,70 @@ def test_create_requires_explicit_platform_and_python_metadata(tmp_path: Path) -
 
     assert created.returncode != 0
     assert not (tmp_path / MANIFEST_NAME).exists()
+
+
+def test_scan_uses_fresh_path_stat_when_direntry_ids_are_zero(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    (tmp_path / "app.py").write_text("content", encoding="utf-8")
+
+    class WindowsLikeDirEntry:
+        def __init__(self, path: Path) -> None:
+            self.path = str(path)
+            self.name = path.name
+
+        def stat(self, *, follow_symlinks: bool = True) -> SimpleNamespace:
+            actual = Path(self.path).stat(follow_symlinks=follow_symlinks)
+            return SimpleNamespace(
+                st_mode=actual.st_mode,
+                st_size=actual.st_size,
+                st_dev=0,
+                st_ino=0,
+            )
+
+    class WindowsLikeScandir:
+        def __init__(self, directory: str | os.PathLike[str]) -> None:
+            self.entries = [WindowsLikeDirEntry(Path(directory) / "app.py")]
+
+        def __iter__(self):
+            return iter(self.entries)
+
+    def scandir(directory: str | os.PathLike[str]) -> WindowsLikeScandir:
+        assert Path(directory) == tmp_path
+        return WindowsLikeScandir(directory)
+
+    monkeypatch.setattr(offline_bundle.os, "scandir", scandir)
+
+    scanned = offline_bundle._scan_files(tmp_path)
+
+    assert scanned["app.py"]["size"] == len(b"content")
+    assert scanned["app.py"]["sha256"] == hashlib.sha256(b"content").hexdigest()
+
+
+def test_scan_rejects_file_replaced_after_path_stat(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    target = tmp_path / "app.py"
+    replacement = tmp_path / "replacement.tmp"
+    target.write_text("original", encoding="utf-8")
+    replacement.write_text("replacement", encoding="utf-8")
+    original_stat = Path.stat
+    replaced = False
+
+    def stat_then_replace(
+        path: Path, *, follow_symlinks: bool = True
+    ) -> os.stat_result:
+        nonlocal replaced
+        result = original_stat(path, follow_symlinks=follow_symlinks)
+        if path == target and not follow_symlinks and not replaced:
+            os.replace(replacement, target)
+            replaced = True
+        return result
+
+    monkeypatch.setattr(Path, "stat", stat_then_replace)
+
+    with pytest.raises(offline_bundle.BundleError, match="file changed while scanning"):
+        offline_bundle._scan_files(tmp_path)
 
 
 def test_bundle_root_must_be_explicit() -> None:
