@@ -68,5 +68,7 @@ jobs:
         run: python -m pytest
       - name: Run synthetic ten-camera capacity smoke
         run: python scripts/qa_ten_camera_smoke.py --root artifacts/qa-ten-camera
+      - name: Run isolated active-observation experiment
+        run: python scripts/experiment_active_observation.py --output artifacts/active-observation
       - name: Build wheel and source distribution
         run: python -m build

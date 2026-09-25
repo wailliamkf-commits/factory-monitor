@@ -1,5 +1,7 @@
 # Factory Monitor：从这里开始
 
+2026-09-25 新增 [主动观察合成实验包说明](docs/ACTIVE_OBSERVATION_LAB_zh.md)：针对无人像、九/十六宫格清晰度和 Computer Use 校准验证。该实验独立于以下现场软件，不启动捕获或自动点击。最新架构决策见 [主动观察与稳定性路线](docs/ACTIVE_OBSERVATION_ARCHITECTURE_20260925_zh.md)。
+
 持续运行、半小时测试交接、固定版本下载及更新回退，先读 [稳定运行与版本交付](docs/STABLE_OPERATION_zh.md)。目标 Windows 先前出现十路合成证据缺口和退出失败；用户现报告独立副本已有两处修复，正在跑半小时合成测试，差异与结果尚待回收审计。先保留该副本与输出，再按该流程核验，不以下载 main 覆盖现场修复。
 
 准备现场测试时，先读 [分阶段测试矩阵](docs/superpowers/plans/2026-09-21-field-test-matrix.md)。测试计划已准备；收到用户明确开始指令后才采集现场画面，按 A 基线及条件路线执行。
