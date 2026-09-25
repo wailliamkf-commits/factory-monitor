@@ -41,10 +41,10 @@ _DEFAULT = {
         "layout_version": 1,
         "calibrated": False,
     },
-    "detection": {"model_path": "models/yolo11n.pt", "device": "cpu", "fps": 5, "confidence": 0.35},
+    "detection": {"model_path": "models/yolo11n.pt", "device": "auto", "fps": 5, "confidence": 0.35},
     "review": {
         "enabled": True,
-        "endpoint": "http://127.0.0.1:11434",
+        "endpoint": "http://127.0.0.1:11435",
         "model": "qwen3-vl:2b-instruct",
         "timeout_seconds": 15,
         "cloud_enabled": False,

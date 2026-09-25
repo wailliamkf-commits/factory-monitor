@@ -229,6 +229,7 @@ def _detection_process(
         verification = config["switching"].get("verification", {})
         mapping_error_reported = False
         heartbeat_states: dict[str, dict[str, Any]] = {}
+        tracking_views: dict[str, str] = {}
         warmed = source_name == "demo"
         while not stop_event.is_set():
             try:
@@ -266,6 +267,21 @@ def _detection_process(
                 mapping_error_reported = True
             elif mapping_valid:
                 mapping_error_reported = False
+            batch: dict[str, np.ndarray] = {}
+            if detector is not None:
+                for camera in cameras:
+                    camera_id = camera["id"]
+                    health, camera_image = mapped[camera_id]
+                    view = health if camera_image is not None and health in {"observable", "detail"} else None
+                    previous_view = tracking_views.pop(camera_id, None)
+                    if previous_view is not None and previous_view != view:
+                        detector.reset(camera_id)
+                    if view is not None:
+                        tracking_views[camera_id] = view
+                        batch[camera_id] = camera_image
+                people_by_camera = detector.detect_batch(batch) if batch else {}
+            else:
+                people_by_camera = {}
             for camera in cameras:
                 camera_id = camera["id"]
                 health, camera_image = mapped[camera_id]
@@ -277,7 +293,7 @@ def _detection_process(
                     people = packet.get("demo_people", {}).get(camera_id, [])
                 else:
                     health = "observable"
-                    people = detector.detect(camera_id, camera_image) if detector else []
+                    people = people_by_camera[camera_id]
                 messages.put(
                     {
                         "_kind": "observation",

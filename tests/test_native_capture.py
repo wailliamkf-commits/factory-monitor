@@ -106,3 +106,17 @@ def test_windows_capture_reports_provider_conversion_failure(monkeypatch: pytest
 
     with pytest.raises(CaptureError, match="provider conversion failed"):
         capture.read()
+
+
+def test_windows_frame_keeps_capture_time_when_dequeued_later(monkeypatch):
+    clock = {"wall": 100.0, "mono": 50.0}
+    monkeypatch.setattr(windows_module.time, "time", lambda: clock["wall"])
+    monkeypatch.setattr(windows_module.time, "monotonic", lambda: clock["mono"])
+    _mock_windows_capture_provider(monkeypatch, _BgrProviderFrame(np.zeros((1, 1, 4), dtype=np.uint8)))
+    capture = WindowsGraphicsCapture({"backend": "display", "display_index": 0})
+    clock.update(wall=108.0, mono=58.0)
+
+    result = capture.read()
+
+    assert result["timestamp"] == 100.0
+    assert result["monotonic"] == 50.0

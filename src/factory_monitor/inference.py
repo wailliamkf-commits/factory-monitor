@@ -33,6 +33,8 @@ def _resolve_device(device: str) -> str:
         if device == "mps":
             raise ModelUnavailable("torch with MPS support is unavailable") from exc
         return "cpu"
+    if device == "auto" and torch.cuda.is_available():
+        return "cuda"
     available = bool(getattr(torch.backends, "mps", None) and torch.backends.mps.is_available())
     if device == "mps" and not available:
         raise ModelUnavailable("requested MPS device is unavailable")
@@ -55,22 +57,44 @@ class YoloPersonDetector:
         self._yolo_type = YOLO
         self.device = _resolve_device(device)
         self.confidence = float(confidence)
-        self._models: dict[str, Any] = {}
-        self._untracked_sequence = 0
+        self._model: Any | None = None
+        self._trackers: dict[str, Any] = {}
 
     def detect(self, camera_id: str, image: np.ndarray) -> list[dict[str, Any]]:
-        model = self._models.get(camera_id)
-        if model is None:
+        return self.detect_batch({camera_id: image})[camera_id]
+
+    def reset(self, camera_id: str) -> None:
+        """Discard one camera's temporal state after blindness or a layout change."""
+        self._trackers.pop(camera_id, None)
+
+    def _new_tracker(self) -> Any:
+        from ultralytics.trackers.basetrack import BaseTrack
+        from ultralytics.trackers.byte_tracker import BYTETracker
+        from ultralytics.utils import IterableSimpleNamespace, YAML
+        from ultralytics.utils.checks import check_yaml
+
+        config = IterableSimpleNamespace(**YAML.load(check_yaml("bytetrack.yaml")))
+        config.device = self.device
+        # BYTETracker.__init__ resets a process-wide counter. Preserve it so
+        # adding or resetting one camera cannot reuse an active camera's ID.
+        next_id = BaseTrack._count
+        tracker = BYTETracker(args=config)
+        BaseTrack._count = max(next_id, BaseTrack._count)
+        return tracker
+
+    def detect_batch(self, images: dict[str, np.ndarray]) -> dict[str, list[dict[str, Any]]]:
+        """Run one prediction for the visible images, then track each camera separately."""
+        if not images:
+            return {}
+        if self._model is None:
             try:
-                model = self._yolo_type(str(self.model_path), task="detect")
+                self._model = self._yolo_type(str(self.model_path), task="detect")
             except Exception as exc:
                 raise ModelUnavailable(f"could not load YOLO model: {exc}") from exc
-            self._models[camera_id] = model
+        camera_ids = list(images)
         try:
-            results = model.track(
-                image,
-                persist=True,
-                tracker="bytetrack.yaml",
+            results = self._model.predict(
+                source=[images[camera_id] for camera_id in camera_ids],
                 classes=[0],
                 conf=self.confidence,
                 device=self.device,
@@ -78,38 +102,34 @@ class YoloPersonDetector:
             )
         except Exception as exc:
             raise ModelUnavailable(f"YOLO inference failed: {exc}") from exc
-        height, width = image.shape[:2]
-        people: list[dict[str, Any]] = []
-        if not results:
-            return people
-        boxes = results[0].boxes
-        if boxes is None:
-            return people
-        coords = boxes.xyxy.cpu().numpy()
-        confidences = boxes.conf.cpu().numpy()
-        if boxes.id is not None:
-            ids = boxes.id.int().cpu().tolist()
-        else:
-            self._untracked_sequence += len(coords) + 1
-            ids = [-(self._untracked_sequence + index) for index in range(len(coords))]
-        for track_id, bbox, confidence in zip(ids, coords, confidences, strict=True):
-            x1, y1, x2, y2 = (float(value) for value in bbox)
-            normalized = [
-                min(1.0, max(0.0, x1 / width)),
-                min(1.0, max(0.0, y1 / height)),
-                min(1.0, max(0.0, x2 / width)),
-                min(1.0, max(0.0, y2 / height)),
-            ]
-            if normalized[0] >= normalized[2] or normalized[1] >= normalized[3]:
-                continue
-            people.append(
-                {
-                    "track_id": int(track_id),
-                    "bbox": normalized,
-                    "confidence": float(confidence),
-                }
-            )
-        return people
+        if len(results) != len(camera_ids):
+            raise ModelUnavailable("YOLO returned a different number of results than camera images")
+        output: dict[str, list[dict[str, Any]]] = {}
+        for camera_id, result in zip(camera_ids, results, strict=True):
+            image = images[camera_id]
+            tracker = self._trackers.get(camera_id)
+            if tracker is None:
+                tracker = self._new_tracker()
+                self._trackers[camera_id] = tracker
+            try:
+                tracks = tracker.update(result.boxes.cpu().numpy(), image)
+            except Exception as exc:
+                raise ModelUnavailable(f"ByteTrack failed for {camera_id}: {exc}") from exc
+            height, width = image.shape[:2]
+            people: list[dict[str, Any]] = []
+            for track in tracks:
+                x1, y1, x2, y2 = (float(value) for value in track[:4])
+                normalized = [
+                    min(1.0, max(0.0, x1 / width)),
+                    min(1.0, max(0.0, y1 / height)),
+                    min(1.0, max(0.0, x2 / width)),
+                    min(1.0, max(0.0, y2 / height)),
+                ]
+                if normalized[0] >= normalized[2] or normalized[1] >= normalized[3]:
+                    continue
+                people.append({"track_id": int(track[4]), "bbox": normalized, "confidence": float(track[5])})
+            output[camera_id] = people
+        return output
 
 
 class OllamaReviewer:
@@ -158,6 +178,8 @@ class OllamaReviewer:
             "Review these ordered timestamped industrial monitoring frames. Return JSON only with "
             "decision (supported, dismissed, or uncertain), a non-empty reason, and visible_evidence "
             "as a list of only directly visible facts. "
+            "Keep reason under 25 words and 180 characters. Include at most three short facts, "
+            "each under 100 characters. Do not repeat. When evidence is insufficient, use uncertain. "
             "Never infer intent, theft, identity, or work ethic."
         )
         prompt += " Frame timestamps (epoch seconds): " + ", ".join(f"{value:.3f}" for value in timestamps) + "."
@@ -179,10 +201,27 @@ class OllamaReviewer:
                     "is absent."
                 )
             prompt += " Context: " + json.dumps(context, ensure_ascii=False)
+        schema: dict[str, Any] = {
+            "type": "object",
+            "properties": {
+                "decision": {"type": "string", "enum": ["supported", "dismissed", "uncertain"]},
+                "reason": {"type": "string", "minLength": 1, "maxLength": 180},
+                "visible_evidence": {"type": "array", "maxItems": 3,
+                                     "items": {"type": "string", "minLength": 1, "maxLength": 100}},
+            },
+            "required": ["decision", "reason", "visible_evidence"],
+            "additionalProperties": False,
+        }
+        if context and context.get("kind") == "material_candidate":
+            schema["properties"].update({
+                "target_visible": {"type": "boolean"},
+                "target_type": {"type": "string", "enum": ["cable", "wire", "bundle", "coil", "none", "unclear"]},
+            })
+            schema["required"].extend(["target_visible", "target_type"])
         payload = {
             "model": self.model,
             "stream": False,
-            "format": "json",
+            "format": schema,
             "messages": [
                 {
                     "role": "user",
@@ -222,8 +261,11 @@ class OllamaReviewer:
             decision not in {"supported", "dismissed", "uncertain"}
             or not isinstance(reason, str)
             or not reason.strip()
+            or len(reason) > 180
             or not isinstance(visible, list)
-            or any(not isinstance(item, str) or not item.strip() for item in visible)
+            or len(visible) > 3
+            or any(not isinstance(item, str) or not item.strip() or len(item) > 100 for item in visible)
+            or (decision == "supported" and not visible)
         ):
             raise LocalReviewError("local Ollama response failed the review schema")
         if context and context.get("kind") == "material_candidate":

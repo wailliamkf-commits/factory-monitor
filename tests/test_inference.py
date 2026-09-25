@@ -1,8 +1,10 @@
 import json
+import sys
 import threading
 import time
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
+from types import SimpleNamespace
 
 import numpy as np
 import pytest
@@ -12,6 +14,7 @@ from factory_monitor.inference import (
     ModelUnavailable,
     OllamaReviewer,
     YoloPersonDetector,
+    _resolve_device,
 )
 
 
@@ -28,7 +31,7 @@ class _OllamaHandler(BaseHTTPRequestHandler):
         assert self.path == "/api/chat"
         assert body["model"] == "qwen3-vl:2b-instruct"
         assert body["stream"] is False
-        assert body["format"] == "json"
+        assert body["format"] == "json" or isinstance(body["format"], dict)
         payload = json.dumps({"message": {"content": json.dumps(type(self).response_content)}})
         encoded = payload.encode()
         self.send_response(200)
@@ -90,6 +93,20 @@ def test_missing_yolo_model_is_a_visible_failure(tmp_path: Path):
         YoloPersonDetector(tmp_path / "missing.pt", device="cpu")
 
 
+@pytest.mark.parametrize(
+    ("cuda_available", "mps_available", "expected"),
+    [(True, True, "cuda"), (False, True, "mps"), (False, False, "cpu")],
+)
+def test_auto_device_prefers_cuda_then_mps_then_cpu(monkeypatch, cuda_available, mps_available, expected):
+    fake_torch = SimpleNamespace(
+        cuda=SimpleNamespace(is_available=lambda: cuda_available),
+        backends=SimpleNamespace(mps=SimpleNamespace(is_available=lambda: mps_available)),
+    )
+    monkeypatch.setitem(sys.modules, "torch", fake_torch)
+
+    assert _resolve_device("auto") == expected
+
+
 def test_ollama_reviewer_sends_ordered_timestamped_frames_with_token_bound(ollama_server):
     reviewer = OllamaReviewer(ollama_server, "qwen3-vl:2b-instruct", timeout_seconds=2)
     frames = [
@@ -136,3 +153,21 @@ def test_material_review_never_accepts_generic_bag_as_supported(ollama_server):
             deadline=time.monotonic() + 2,
             context={"kind": "material_candidate"},
         )
+
+
+def test_review_requests_bounded_schema_to_prevent_freeform_token_exhaustion(ollama_server):
+    reviewer = OllamaReviewer(ollama_server, "qwen3-vl:2b-instruct", timeout_seconds=2)
+    reviewer.review(np.zeros((8, 8, 3), dtype=np.uint8), deadline=time.monotonic() + 2,
+                    context={"kind": "material_candidate"})
+    schema = _OllamaHandler.last_body["format"]
+    assert isinstance(schema, dict)
+    assert schema["properties"]["visible_evidence"]["maxItems"] == 3
+    assert schema["properties"]["reason"]["maxLength"] <= 180
+    assert "target_type" in schema["required"]
+
+
+def test_supported_review_requires_at_least_one_visible_fact(ollama_server):
+    _OllamaHandler.response_content = {"decision": "supported", "reason": "nothing specified", "visible_evidence": []}
+    reviewer = OllamaReviewer(ollama_server, "qwen3-vl:2b-instruct", timeout_seconds=2)
+    with pytest.raises(LocalReviewError, match="schema"):
+        reviewer.review(np.zeros((8, 8, 3), dtype=np.uint8), deadline=time.monotonic() + 2)
